@@ -1,3 +1,7 @@
+(**************************************************************)
+(*           Copyright (c) 2024 David Fuenmayor               *)
+(*       MIT License (see LICENSE file for details)           *)
+(**************************************************************)
 theory F4_orderL
 imports F4
 begin
