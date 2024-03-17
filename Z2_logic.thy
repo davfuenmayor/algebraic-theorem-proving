@@ -6,66 +6,90 @@ theory Z2_logic
 imports Z2_order
 begin
 
-section \<open>Logics based on Z2\<close>
+section \<open>Logical reasoning by polynomial simplification in Z2\<close>
 
-(*Solve interesting problems using CAS*)
+subsection \<open>Logical notions in algebraic terms\<close>
+
+(*The notions of logical validity and invalidity are stated algebraically as follows: *)
+abbreviation(input) Validity::"Z\<^sub>2 \<Rightarrow> bool" ("\<turnstile> _" 49) 
+  where "\<turnstile> C  \<equiv> C = \<^bold>\<top>"
+abbreviation(input) Invalidity::"Z\<^sub>2 \<Rightarrow> bool" ("\<turnstile>\<^sup>n _" 49) 
+  where "\<turnstile>\<^sup>n C \<equiv> C = \<^bold>\<bottom>"
+
+(*The notion of logical consequence can be stated algebraically as the lattice-ordering: *)
+definition Consequence::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2 \<Rightarrow> bool" (infixr "\<turnstile>" 10) 
+  where "A \<turnstile> C  \<equiv> A \<le> C"
+
+(*The above definition of consequence (aka. 'degree-preserving') is equivalent, by bivalence, to the
+ traditional definitions from the literature (based on 'truth-preservation', 'incompatibility', etc.)*)
+lemma Consequence_truthpres_def: "(A \<turnstile> C) = (\<turnstile> A \<longrightarrow> \<turnstile> C)" unfolding Consequence_def using leq.elims(1) by blast
+lemma Consequence_incompat_def:  "(A \<turnstile> C) = (\<turnstile>\<^sup>n A \<^bold>\<and> \<^bold>\<sim>C)" unfolding Consequence_def by (smt (z3) Meet.elims Negation.simps Z\<^sub>2.distinct leq.elims)
+
+(*The (dual-)deduction-metatheorem, (d)DMT, allows for switching between consequence and (in)validity*)
+lemma DMT:  "(A \<turnstile> C) \<longleftrightarrow> \<turnstile>  A \<^bold>\<rightarrow> C" unfolding Consequence_def by (smt (z3) Implication.elims leq.simps)
+lemma dDMT: "(A \<turnstile> C) \<longleftrightarrow> \<turnstile>\<^sup>n A \<^bold>\<leftharpoonup> C" unfolding Consequence_def by (smt (z3) DualImplication.elims leq.simps)
+
+
+subsection \<open>Setting-up CAS Integration\<close>
+
+(*Routines for integrating a CAS (Sage) for manipulating polynomials*)
 ML_file\<open>SagePoly.ML\<close>
 
+(*Declares two methods for polynomial rewriting using CAS: 
+  - polysimp: polynomial simplification by rewriting in canonical form (ie. as sum of monomials)
+  - polyfact: polysimp followed by factorization (when applicable) *)
 method_setup polysimp = 
 \<open>Args.term >> (fn params => fn ctxt =>  SIMPLE_METHOD' (SUBGOAL (cmd_exec ctxt (simp_cmd (term2str ctxt params)))))\<close>
-"Uses SageMath to simplify current goal by reducing the given polynomial to its unique normal form"
-
 method_setup polyfact =
 \<open>Args.term >> (fn params => fn ctxt =>  SIMPLE_METHOD' (SUBGOAL (cmd_exec ctxt (factor_cmd (term2str ctxt params)))))\<close>
-"Uses SageMath to simplify current goal by factoring the given polynomial"
 
-abbreviation(input) \<open>Z2 \<equiv> ''PolynomialRing(GF(2), {0})''\<close>
+(*Step-by-step: how to solve a logic problem algebraically (with Sage)*)
+lemma "\<^bold>\<sim>(x \<^bold>\<and> y) \<turnstile> (\<^bold>\<sim>x \<^bold>\<or> \<^bold>\<sim>y)"
+  unfolding DMT (*apply deduction metatheorem (optional)*)
+  unfolding polydefs (*expand logical connectives as their polynomial representations*)
+  apply(polysimp "''PolynomialRing(GF(2),{x,y})''") (*simplify given polynomial over the field Z\<^sub>2[x,y] *)
+  sorry (*proven because the simplified expression trivially holds*) (*TODO: do this automatically via oracle*)
 
-(*Let us introduce the following convenient proof methods (variables among 'x,y,z')*)
-method pfact = unfold polydefs; polyfact "[Z2, ''|x,y,z|'']"
-method psimp = unfold polydefs; polysimp "[Z2, ''|x,y,z|'']"
+(*Configuration string indicating that we work with polynomials over Z\<^sub>2 using variables in {x,y,z,w} *)
+abbreviation(input) \<open>Z2config \<equiv> ''PolynomialRing(GF(2), {x,y,z,w})''\<close>
 
-
-(*Test factorization and simplification of polynomials using Sage*)
-lemma "x \<^bold>\<and> y = 0" apply pfact oops
-lemma "x \<^bold>\<rightarrow> y = 0" apply pfact oops
-
-lemma "x \<^bold>\<or> y = r" apply pfact oops
-lemma "x \<^bold>\<rightharpoonup> y = r" apply psimp oops
-
-
-(*Consequence and validity definitions *)
-abbreviation(input) Validity::"Z\<^sub>2 \<Rightarrow> bool" ("\<turnstile> _" 49) 
-  where "\<turnstile> a \<equiv> a = \<^bold>\<top>"
-abbreviation(input) Consequence_local::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2 \<Rightarrow> bool" (infixr "\<turnstile>" 10) 
-  where "a \<turnstile> b \<equiv> a \<le> b"
-abbreviation(input) Consequence_global::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2 \<Rightarrow> bool" (infixr "\<turnstile>\<^sub>g" 10) 
-  where "a \<turnstile>\<^sub>g b \<equiv> \<turnstile> a \<longrightarrow> \<turnstile> b"
-
-(*Local and global consequence are the same (in the bivalued case)*)
-lemma "(a \<turnstile>\<^sub>g b) = (a \<turnstile> b)" using leq.elims(1) by blast
-
-(*The deduction metatheorem (DMT)*)
-lemma DMT: "(a \<turnstile> b) \<longleftrightarrow> \<turnstile> (a \<^bold>\<rightarrow> b)"
-  by (smt (z3) Implication.elims Z\<^sub>2.simps(2) leq.elims(3) leq.simps(3))
+(*Furthermore, we can use Eisbach to introduce convenient proof methods*)
+method psimp = unfold polydefs Consequence_def; polysimp "Z2config"
+method pfact = unfold polydefs Consequence_def; polyfact "Z2config"
 
 
-abbreviation(input) Invalidity::"Z\<^sub>2 \<Rightarrow> bool" ("\<turnstile>\<^sup>n _" 49) 
-  where "\<turnstile>\<^sup>n a \<equiv> a = \<^bold>\<bottom>"
+subsection \<open>Solving logic problems with Sage\<close>
 
-(*The (dual) deduction metatheorem (DMT)*)
-lemma dDMT: "(a \<turnstile> b) \<longleftrightarrow> \<turnstile>\<^sup>n (a \<^bold>\<leftharpoonup> b)"
-  by (metis DMT DualImplication.simps(1) DualImplication.simps(2) DualImplication.simps(3) DualImplication.simps(4) leq.elims(2) leq.elims(3))
+(*Proving theorems (double-checking with nitpick)*)
+
+lemma "\<turnstile> x \<^bold>\<or> \<^bold>\<sim>x" nitpick[expect=none]
+  apply psimp sorry (*psimp returns a trivially true expression*)
+
+lemma "\<turnstile>\<^sup>n x \<^bold>\<and> \<^bold>\<sim>x" nitpick[expect=none]
+  apply psimp sorry (*psimp returns a trivially true expression*)
+
+lemma "x \<turnstile> \<^bold>\<sim>(\<^bold>\<sim>x)" nitpick[expect=none]
+  apply psimp sorry (*psimp returns a trivially true expression (by reflexivity of  \<le>)*)
+
+lemma "\<^bold>\<sim>(\<^bold>\<sim>x) \<turnstile> x" nitpick[expect=none]
+  unfolding DMT apply psimp sorry (*psimp returns a trivially true expression*)
+
+lemma "((x \<^bold>\<rightarrow> y) \<^bold>\<and> (z \<^bold>\<rightarrow> w)) \<turnstile> ((x \<^bold>\<or> z) \<^bold>\<rightarrow> (y \<^bold>\<or> w))" nitpick[expect=none]
+  apply psimp oops (*psimp returns a not-quite-trivially true expression (we should massage the formula a little...)*)
+
+lemma "((x \<^bold>\<rightarrow> y) \<^bold>\<and> (z \<^bold>\<rightarrow> w)) \<turnstile> ((x \<^bold>\<or> z) \<^bold>\<rightarrow> (y \<^bold>\<or> w))" nitpick[expect=none]
+  unfolding DMT apply psimp sorry (*... using DMT, psimp now returns a trivially true expression*)
 
 
-(*How to use Sage to refute/verify logic conjectures*)
-lemma "\<turnstile> x \<^bold>\<or> \<^bold>\<sim>x" apply psimp oops (*polysimp returns \<^bold>\<top>*)
-lemma "\<turnstile>\<^sup>n x \<^bold>\<and> \<^bold>\<sim>x" apply psimp oops (*polysimp returns \<^bold>\<bottom>*)
-lemma "x \<turnstile> \<^bold>\<sim>(\<^bold>\<sim>x)" unfolding DMT apply psimp oops (*polysimp returns \<^bold>\<top>*)
-lemma "\<^bold>\<sim>(\<^bold>\<sim>x) \<turnstile> x" unfolding DMT apply psimp oops (*polysimp returns \<^bold>\<top>*)
+(*Refuting non-theorems (double-checking with nitpick)*)
 
-(*Both below return the same polynomial (TODO: implement equality check in tactic)*)
-lemma "\<^bold>\<sim>(x \<^bold>\<or> y) = (\<^bold>\<sim>x \<^bold>\<and> \<^bold>\<sim>y)" apply psimp oops
-lemma "\<^bold>\<sim>(x \<^bold>\<or> y) = (\<^bold>\<sim>x \<^bold>\<and> \<^bold>\<sim>y)"  apply(rule sym) apply(psimp) oops
+lemma "x \<turnstile> \<^bold>\<sim>x" nitpick[expect=genuine]
+  apply psimp oops (*psimp returns a not-quite-trivially false expression (x \<le> x + 1 does not generally hold in Z\<^sub>2)*)
+
+lemma "x \<turnstile> \<^bold>\<sim>x" nitpick[expect=genuine]
+  unfolding DMT apply psimp oops (*using DMT, psimp now returns a trivially false expression*)
+
+lemma "y \<^bold>\<rightarrow> \<^bold>\<sim>(x \<^bold>\<rightarrow> y \<^bold>\<and> (z \<^bold>\<or> (y \<^bold>\<rightarrow> x))) \<turnstile> z \<^bold>\<rightarrow> \<^bold>\<sim>(x \<^bold>\<or> y)" nitpick[expect=genuine]
+  unfolding DMT apply psimp oops (*using DMT, psimp returns a trivially false expression*)
 
 end

@@ -4,20 +4,23 @@
 (**************************************************************)
 
 (************************ CONFIGURATION ***************************)
-(*Configure with your local information (TODO: infer automatically)*)
-val CWD = "/home/me/Dropbox/MVExp/"
-(*Configuration for running sage locally or in a container (docker/podman)*)
-val exec = "cd " ^ CWD ^ " ; sage"
-val script = CWD ^ "python/SagePoly.py"
-(* val exec = "podman run --rm -v" ^ CWD ^ "python:/home/sage/python --entrypoint sage sagemath" *)
-(* val script = "python/SagePoly.py" *)
+
+(*Local path to the repository*)
+val CWD = File.platform_path (Resources.master_directory @{theory})
+
+(*For running sage locally *)
+(* val exec = "cd " ^ CWD ^ " ; sage" *)
+(* val script = CWD ^ "python/SagePoly.py" *)
+
+(*For running sage in a container (docker/podman)*)
+val exec = "podman run --rm -v" ^ CWD ^ "/python:/home/sage/python --entrypoint sage sagemath"
+val script = "python/SagePoly.py"
 (*******************************************************************)
 
-fun simp_cmd  params  = fn poly => exec ^ " " ^ script ^ " \"" ^ poly ^ "\" \"" ^ params ^"\""
-fun factor_cmd params = fn poly => (simp_cmd params poly) ^ " \"true\""
+fun simp_cmd  params  = fn poly => exec ^ " " ^ script ^ " \"false\"" ^ " \"" ^ params ^ "\" \"" ^ poly ^"\""
+fun factor_cmd params = fn poly => exec ^ " " ^ script ^ " \"true\""  ^ " \"" ^ params ^ "\" \"" ^ poly ^"\""
 
-(*Replaces (equational) 'goal' term "A (= C)" with (equational) 'newgoal' term "B (= C)", and adding
-  as intermediate subgoal: "A = B" (TODO: implement) *)
+(*Replaces 'goal' term "A" with 'newgoal' term "B" (TODO: implement) *)
 fun replace_goal_tac (ctxt : Proof.context) (goal : term) (newgoal : term) = all_tac
 
 fun term2str ctxt = Print_Mode.setmp [] (Syntax.string_of_term ctxt) 
@@ -28,7 +31,7 @@ fun cmd_exec (ctxt : Proof.context) (cmd : string -> string) =
     val newgoal_str = goal |> term2str ctxt |> cmd |> Isabelle_System.bash_output |> fst 
     val _ = writeln ("Sage output: " ^ newgoal_str) (*debugging output*)
     val newgoal = Syntax.read_term ctxt newgoal_str
-    val _ = writeln ("Parsed as term: " ^ (Syntax.string_of_term ctxt newgoal)) (*debugging output*)
+    val _ = writeln ("Parsed as: " ^ (Syntax.string_of_term ctxt newgoal)) (*debugging output*)
   in replace_goal_tac ctxt goal newgoal end
 
 (*TODO: make the following visible as proof methods from importing theory files*)

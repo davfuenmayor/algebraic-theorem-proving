@@ -222,5 +222,5 @@ lemma NjoinL_polydef: "x \<^bold>\<down> y = x\<^sup>2\<cdot>y\<^sup>2 + x\<^sup
 
 declare ClosureA_polydef[polydefs] InteriorA_polydef[polydefs] ClosureL_polydef[polydefs] InteriorL_polydef[polydefs]
         NegationClass_polydef[polydefs] MultiplicativeInverse_polydef[polydefs] NegationDM_polydef[polydefs]
-
+        NmeetA_polydef[polydefs] NjoinA_polydef[polydefs] NmeetL_polydef[polydefs] NjoinL_polydef[polydefs] 
 end
