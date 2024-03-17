@@ -1,3 +1,4 @@
 *.thy~
 *.ML~
 *.thy#
+*/debug.txt
