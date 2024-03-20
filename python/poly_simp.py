@@ -1,7 +1,22 @@
 #!/usr/bin/env sage
-
 import sys
 from sage.all import *
+
+def parse_params(s):
+    params = s.strip().replace("''", "'") # escaping Isabelle encoded strings
+    if params.startswith("["): # in case params is a list of strings: [template, placeholder1, placeholder2, ...]        
+        params = eval(params)
+        return params[0].format(*params[1:]).replace("{", "\"").replace("}", "\"")
+    return params.replace("\'", "").replace("{", "\"").replace("}", "\"")
+
+def simplify_exponents(ring, poly):
+    order = ring.base_ring().order()
+    vars = ring.gens()
+    if hasattr(poly,'mod') and not order in [+Infinity,-Infinity]:
+        for var in vars:            
+            m = var**order - var            
+            poly = poly.mod(m)
+    return poly 
 
 def polysimp(poly_str, params_str, factorize):      
     R = eval(parse_params(params_str))
@@ -43,24 +58,8 @@ def parse_polyeq(poly_str):
         sep = ">"
         return poly_str[:geq_index].strip(), poly_str[geq_index+1:].strip(), prefix, sep 
     return poly_str.strip(), "", prefix, ""  
-    
-def parse_params(s):
-    params = s.strip().replace("''", "'") # escaping Isabelle encoded strings
-    if params.startswith("["): # in case params is a list of strings: [template, placeholder1, placeholder2, ...]        
-        params = eval(params)
-        return params[0].format(*params[1:]).replace("{", "\"").replace("}", "\"")
-    return params.replace("\'", "").replace("{", "\"").replace("}", "\"")
 
-def simplify_exponents(ring, poly):
-    order = ring.base_ring().order()
-    vars = ring.gens()
-    if hasattr(poly,'mod') and not order in [+Infinity,-Infinity]:
-        for var in vars:            
-            m = var**order - var            
-            poly = poly.mod(m)
-    return poly    
-
-with open(os.getcwd()+"/python/debug.txt", 'w') as file:
+with open(os.getcwd()+"/python/debug-poly_simp.txt", 'w') as file:
     file.write("Command: " + str(sys.argv))
 
 if len(sys.argv) < 4:
