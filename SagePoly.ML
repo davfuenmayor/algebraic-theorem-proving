@@ -17,7 +17,7 @@ val simp_script = "python/poly_simp.py"
 val imc_script = "python/poly_imc.py"
 (*******************************************************************)
 
-fun simplify_cmd  params  = fn expr => exec ^ " " ^ simp_script ^ " \"false\"" ^ " \"" ^ params ^ "\" \"" ^ expr ^"\""
+fun reduce_cmd  params  = fn expr => exec ^ " " ^ simp_script ^ " \"false\"" ^ " \"" ^ params ^ "\" \"" ^ expr ^"\""
 fun factorize_cmd params = fn expr => exec ^ " " ^ simp_script ^ " \"true\""  ^ " \"" ^ params ^ "\" \"" ^ expr ^"\""
 fun imc_cmd params = fn expr => exec ^ " " ^ imc_script ^ " \"" ^ params ^ "\" \"" ^ expr ^"\""
 

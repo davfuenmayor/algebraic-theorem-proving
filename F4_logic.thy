@@ -61,23 +61,17 @@ lemma  "(A \<turnstile>\<^sub>g C) = [A | \<^bold>\<top>\<^sup>L \<turnstile> C]
 lemma ConsequenceGlobal_simp: "[A\<^sub>g | A\<^sub>l \<turnstile> C] = (A\<^sub>g \<turnstile>\<^sub>g A\<^sub>l \<^bold>\<rightarrow> C)" 
   using Consequence_def ConsequenceGlobal_def ConsequenceLocal_def DMT by simp
 
-(*The definitions below draw from the fact (a corollary of Hilbert's Nullstellensatz TODO: citations)
- that global consequence in m-valued logics, for a prime-power m, can be stated in terms of 
- ideal membership in GF(m), and viceversa.*)
-definition idealMembership1::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> o" ("_ in <_>")
-  where "P in <Q> \<equiv> Q + \<^bold>\<top>\<^sup>L \<turnstile>\<^sub>g P + \<^bold>\<top>\<^sup>L"
-definition idealMembership2::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> o" ("_ in <_,_>")
-  where "P in <Q\<^sub>1,Q\<^sub>2> \<equiv> (Q\<^sub>1 + \<^bold>\<top>\<^sup>L \<^bold>\<and> Q\<^sub>2 + \<^bold>\<top>\<^sup>L) \<turnstile>\<^sub>g P + \<^bold>\<top>\<^sup>L"
-definition idealMembership3::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> o" ("_ in <_,_,_>")
-  where "P in <Q\<^sub>1,Q\<^sub>2,Q\<^sub>3> \<equiv> (Q\<^sub>1 + \<^bold>\<top>\<^sup>L \<^bold>\<and> Q\<^sub>2 + \<^bold>\<top>\<^sup>L \<^bold>\<and> Q\<^sub>3 + \<^bold>\<top>\<^sup>L) \<turnstile>\<^sub>g P + \<^bold>\<top>\<^sup>L"
+(*Introduces custom notation for ideal-membership checking (for interfacing with CAS)*)
+consts idealMembership1::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> o" ("_ in <_>")
+consts idealMembership2::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> o" ("_ in <_,_>")
+consts idealMembership3::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> o" ("_ in <_,_,_>")
 
-(*The equalities below conveniently transform global-consequence to ideal-membership checking (IMC)*)
-lemma ConsequenceGlobal_imc: "(A \<turnstile>\<^sub>g C) = (C - \<^bold>\<top>\<^sup>L in < A - \<^bold>\<top>\<^sup>L >)" 
-  unfolding idealMembership1_def by (smt (z3) Addition.simps F\<^sub>4.exhaust)
-lemma ConsequenceGlobal_imc2: "(A\<^sub>1 \<^bold>\<and> A\<^sub>2 \<turnstile>\<^sub>g C) = (C - \<^bold>\<top>\<^sup>L in < A\<^sub>1 - \<^bold>\<top>\<^sup>L, A\<^sub>2 - \<^bold>\<top>\<^sup>L >)" 
-  unfolding idealMembership2_def by (smt (z3) Addition.simps F\<^sub>4.exhaust)
-lemma ConsequenceGlobal_imc3: "(A\<^sub>1 \<^bold>\<and> A\<^sub>2 \<^bold>\<and> A\<^sub>3 \<turnstile>\<^sub>g C) = (C - \<^bold>\<top>\<^sup>L in < A\<^sub>1 - \<^bold>\<top>\<^sup>L, A\<^sub>2 - \<^bold>\<top>\<^sup>L, A\<^sub>3 - \<^bold>\<top>\<^sup>L >)" 
-  unfolding idealMembership3_def by (smt (z3) Addition.simps F\<^sub>4.exhaust)
+(*The equalities below draw from the fact (TODO cite) that global consequence in m-valued logics, 
+for a prime-power m, can be stated in terms of ideal membership (modulo splitting polynomials) in GF(m)*)
+axiomatization where
+ConsequenceGlobal_imc: "(A \<turnstile>\<^sub>g C) = (C - \<^bold>\<top>\<^sup>L in < A - \<^bold>\<top>\<^sup>L >)" and
+ConsequenceGlobal_imc2: "(A\<^sub>1 \<^bold>\<and> A\<^sub>2 \<turnstile>\<^sub>g C) = (C - \<^bold>\<top>\<^sup>L in < A\<^sub>1 - \<^bold>\<top>\<^sup>L, A\<^sub>2 - \<^bold>\<top>\<^sup>L >)" and
+ConsequenceGlobal_imc3: "(A\<^sub>1 \<^bold>\<and> A\<^sub>2 \<^bold>\<and> A\<^sub>3 \<turnstile>\<^sub>g C) = (C - \<^bold>\<top>\<^sup>L in < A\<^sub>1 - \<^bold>\<top>\<^sup>L, A\<^sub>2 - \<^bold>\<top>\<^sup>L, A\<^sub>3 - \<^bold>\<top>\<^sup>L >)" 
 
 
 subsection \<open>Solving logic problems with Sage\<close>
@@ -86,50 +80,50 @@ subsection \<open>Solving logic problems with Sage\<close>
 lemma "\<^bold>\<midarrow>(x \<^bold>\<and> y) \<turnstile>\<^sub>l (\<^bold>\<midarrow>x \<^bold>\<or> \<^bold>\<midarrow>y)"
   unfolding DMT (*apply deduction metatheorem (optional)*)
   unfolding polydefs (*expand logical connectives as their polynomial representations*)
-  apply(polysimp "''PolynomialRing(GF(4),{x,y})''") (*simplify given polynomial over the field F\<^sub>4[x,y] *)
+  apply(poly_reduce "''PolynomialRing(GF(4),{x,y})''") (*simplify given polynomial over the field F\<^sub>4[x,y] *)
   sorry (*proven because the simplified expression trivially holds*) (*TODO: do this automatically via oracle*)
 
 (*Step-by-step: how to solve a global consequence problem algebraically (with Sage)*)
 lemma "\<^bold>\<midarrow>(x \<^bold>\<and> y) \<turnstile>\<^sub>g (\<^bold>\<midarrow>x \<^bold>\<or> \<^bold>\<midarrow>y)"
   unfolding ConsequenceGlobal_imc (*apply transformation to ideal-membership checking *)
   unfolding polydefs (*expand logical connectives as their polynomial representations*)
-  apply(polyimc "''PolynomialRing(GF(4),{x,y,z})''") (*check ideal-membership over the field F\<^sub>4[x,y] *)
+  apply(poly_imc "''PolynomialRing(GF(4),{x,y,z})''") (*check ideal-membership over the field F\<^sub>4[x,y] *)
   sorry (*proven because the simplified expression trivially holds*) (*TODO: do this automatically via oracle*)
 
 (*Configuration string indicating that we work with polynomials over F\<^sub>4 using variables among {x,y,z,w} *)
 abbreviation(input) \<open>F4config \<equiv> ''PolynomialRing(GF(4), {x,y,z,w})''\<close>
 (*Furthermore, we can use Eisbach to introduce convenient proof methods*)
-method psimp = unfold ConsequenceLocal_def polydefs; polysimp "F4config"
-method pfact = unfold ConsequenceLocal_def polydefs; polyfact "F4config"
+method preduce = unfold ConsequenceLocal_def polydefs; poly_reduce "F4config"
+method pfactor = unfold ConsequenceLocal_def polydefs; poly_factorize "F4config"
 method pimc = (unfold ConsequenceGlobal_imc3 | unfold ConsequenceGlobal_imc2 | unfold ConsequenceGlobal_imc);
-              unfold polydefs; polyimc "F4config"
+              unfold polydefs; poly_imc "F4config"
 
 
 (*Proving theorems (double-checking with nitpick)*)
 
 lemma "\<turnstile> x \<^bold>\<or> \<^bold>\<midarrow>x" nitpick[expect=none]
-  apply psimp sorry (*psimp returns a trivially true expression*)
+  apply preduce sorry (*preduce returns a trivially true expression*)
 
 lemma "\<turnstile>\<^sup>n x \<^bold>\<and> \<^bold>\<midarrow>x" nitpick[expect=none]
-  apply psimp sorry (*psimp returns a trivially true expression*)
+  apply preduce sorry (*preduce returns a trivially true expression*)
 
 lemma "x \<turnstile>\<^sub>l \<^bold>\<not>(\<^bold>\<not>x)" nitpick[expect=none]
-  unfolding DMT apply psimp sorry (*psimp returns a trivially true expression*)
+  unfolding DMT apply preduce sorry (*preduce returns a trivially true expression*)
 
 lemma "x \<turnstile>\<^sub>g \<^bold>\<not>(\<^bold>\<not>x)" nitpick[expect=none]
   apply pimc sorry (*pimc returns True*)
 
 lemma "\<^bold>\<not>(\<^bold>\<not>x) \<turnstile>\<^sub>l x" nitpick[expect=none]
-  unfolding DMT apply psimp sorry (*psimp returns a trivially true expression*)
+  unfolding DMT apply preduce sorry (*preduce returns a trivially true expression*)
 
 lemma "\<^bold>\<not>(\<^bold>\<not>x) \<turnstile>\<^sub>g x" nitpick[expect=none]
   apply pimc sorry (*pimc returns True*)
 
 lemma "((x \<^bold>\<rightarrow> y) \<^bold>\<and> (z \<^bold>\<rightarrow> w)) \<turnstile>\<^sub>l ((x \<^bold>\<or> z) \<^bold>\<rightarrow> (y \<^bold>\<or> w))" nitpick[expect=none]
-  apply psimp oops (*psimp returns a not-quite-trivially true expression (we should massage the formula a little...)*)
+  apply preduce oops (*preduce returns a not-quite-trivially true expression (we should massage the formula a little...)*)
 
 lemma "((x \<^bold>\<rightarrow> y) \<^bold>\<and> (z \<^bold>\<rightarrow> w)) \<turnstile>\<^sub>l ((x \<^bold>\<or> z) \<^bold>\<rightarrow> (y \<^bold>\<or> w))" nitpick[expect=none]
-  unfolding DMT apply psimp sorry (*... using DMT, psimp now returns a trivially true expression*)
+  unfolding DMT apply preduce sorry (*... using DMT, preduce now returns a trivially true expression*)
 
 lemma "((x \<^bold>\<rightarrow> y) \<^bold>\<and> (z \<^bold>\<rightarrow> w)) \<turnstile>\<^sub>g ((x \<^bold>\<or> z) \<^bold>\<rightarrow> (y \<^bold>\<or> w))" nitpick[expect=none]
   apply pimc sorry (*pimc returns True*)
@@ -138,22 +132,22 @@ lemma "((x \<^bold>\<rightarrow> y) \<^bold>\<and> (z \<^bold>\<rightarrow> w)) 
 (*Refuting non-theorems (double-checking with nitpick)*)
 
 lemma "\<turnstile> x \<^bold>\<or> \<^bold>\<not>x" nitpick[expect=genuine]
-  apply psimp sorry (*psimp returns a trivially false expression*)
+  apply preduce sorry (*preduce returns a trivially false expression*)
 
 lemma "\<turnstile>\<^sup>n x \<^bold>\<and> \<^bold>\<not>x" nitpick[expect=genuine]
-  apply psimp sorry (*psimp returns a trivially false expression*)
+  apply preduce sorry (*preduce returns a trivially false expression*)
 
 lemma "x \<turnstile>\<^sub>l \<^bold>\<not>x" nitpick[expect=genuine]
-  apply psimp oops (*psimp returns a not-quite-trivially false expression (x \<le> x^2 + 1 does not generally hold in F\<^sub>4)*)
+  apply preduce oops (*preduce returns a not-quite-trivially false expression (x \<le> x^2 + 1 does not generally hold in F\<^sub>4)*)
 
 lemma "x \<turnstile>\<^sub>l \<^bold>\<not>x" nitpick[expect=genuine]
-  unfolding DMT apply psimp oops (*using DMT, psimp now returns a trivially false expression*)
+  unfolding DMT apply preduce oops (*using DMT, preduce now returns a trivially false expression*)
 
 lemma "x \<turnstile>\<^sub>g \<^bold>\<not>x" nitpick[expect=genuine]
   apply pimc sorry (*pimc returns False*)
 
 lemma "y \<^bold>\<rightarrow> \<^bold>\<not>(x \<^bold>\<rightarrow> y \<^bold>\<and> (z \<^bold>\<or> x)) \<turnstile>\<^sub>l z \<^bold>\<rightarrow> \<^bold>\<not>(x \<^bold>\<or> y)" nitpick[expect=genuine]
-  unfolding DMT apply psimp oops (*using DMT, psimp returns a trivially false expression*)
+  unfolding DMT apply preduce oops (*using DMT, preduce returns a trivially false expression*)
 
 lemma "y \<^bold>\<rightarrow> \<^bold>\<not>(x \<^bold>\<rightarrow> y \<^bold>\<and> (z \<^bold>\<or> x)) \<turnstile>\<^sub>g z \<^bold>\<rightarrow> \<^bold>\<not>(x \<^bold>\<or> y)" nitpick[expect=genuine]
   apply pimc sorry (*pimc returns False*)
