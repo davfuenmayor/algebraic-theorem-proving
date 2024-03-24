@@ -11,7 +11,7 @@ declare[[smt_timeout=60]]
 declare[[syntax_ambiguity_warning=false]]
 sledgehammer_params[isar_proof=false,abduce=0,falsify=false]
 (*Nitpick settings*)
-nitpick_params[assms=true,user_axioms=true,show_all,expect=genuine,max_potential=0,max_genuine=1,format=3]
+nitpick_params[assms=true,user_axioms=true,box=false,show_all,expect=genuine,max_potential=0,max_genuine=1,format=3]
 
 (*************** Hide notation/symbols from the library  *****************)
 hide_const(open) 
