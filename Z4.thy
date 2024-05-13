@@ -54,58 +54,49 @@ fun AdditiveInverse::"Z\<^sub>4 \<Rightarrow> Z\<^sub>4" ("-_" [81] 80) where
   "-2 = 2" |
   "-3 = 1"
 
+(*Multiplicative inverse cannot be defined for all x \<noteq> 0 (2 has no inverse) *)
+
+(*Convenient abbreviations*)
 abbreviation Substraction::"Z\<^sub>4 \<Rightarrow> Z\<^sub>4 \<Rightarrow> Z\<^sub>4" (infixl "-" 65) (*adding the additive inverse*)
   where "x - y \<equiv> x + -y"
-
-(*
-abbreviation(input) MultiplicativeInverse::"Z\<^sub>4 \<Rightarrow> Z\<^sub>4" ("(_\<inverse>)" [1000] 999) 
-  where "x\<inverse> \<equiv> x"
-abbreviation Division::"Z\<^sub>4 \<Rightarrow> Z\<^sub>4 \<Rightarrow> Z\<^sub>4" (infixl "'/" 70) (*multiplying the multiplicative inverse*)
-  where "x / y \<equiv> x * y\<inverse>"
-*)
-
 abbreviation Square::"Z\<^sub>4 \<Rightarrow> Z\<^sub>4" ("(_)^2" [91]90)
   where "x^2 \<equiv> x*x"
 abbreviation Cube::"Z\<^sub>4 \<Rightarrow> Z\<^sub>4" ("(_)^3" [91]90)
   where "x^3 \<equiv> x*x*x"
 
 
-subsection \<open>Properties\<close>
+subsection \<open>General Field Properties\<close>
 
 lemma "x + 0 = x"  (* 0 is an additive unit*)
-  by (metis Addition.simps(1) Addition.simps(13) Addition.simps(5) Addition.simps(9) Z\<^sub>4.exhaust)
+  by (smt (z3) Addition.simps Z\<^sub>4.exhaust)
 lemma "x * 0 = 0"     (* 0 is a multiplicative absorber*)
-  using Multiplication.elims by blast
+  by (smt (z3) Multiplication.simps Z\<^sub>4.exhaust)
 lemma "x * 1 = x"      (* 1 is a multiplicative unit*)
-  by (smt (verit, best) AdditiveInverse.elims Multiplication.simps(10) Multiplication.simps(14) Multiplication.simps(2) Multiplication.simps(6))
-
+  by (smt (z3) Multiplication.simps Z\<^sub>4.exhaust)
 lemma "x + -x = 0"   (*additive inverse law*)
-  by (smt (verit, best) Addition.simps(1) Addition.simps(11) Addition.simps(14) Addition.simps(8) AdditiveInverse.elims)
-
-(*lemma "x \<noteq> 0 \<longrightarrow> x * x\<inverse> = 1"     (*multiplicative inverse law*)
-  using Multiplication.elims by blast*)
-
-lemma "(x + x) = 2*x"  (* multiplication as iterated addition *)
-  by (smt (verit, ccfv_threshold) Addition.simps(1) Addition.simps(11) Addition.simps(16) Addition.simps(6) AdditiveInverse.elims Multiplication.simps(10) Multiplication.simps(11) Multiplication.simps(12) Multiplication.simps(9))
-lemma "(x + x + x) = 3*x"  (* multiplication as iterated addition *)
-  by (smt (verit, best) Addition.simps(1) Addition.simps(10) Addition.simps(11) Addition.simps(12) Addition.simps(16) Addition.simps(3) Addition.simps(6) Multiplication.simps(13) Multiplication.simps(14) Multiplication.simps(15) Multiplication.simps(16) Z\<^sub>4.exhaust)
-    
-lemma "(x + x + x + x) = 0" (*addition cycle*)
-  by (smt (verit, best) Addition.simps(1) Addition.simps(10) Addition.simps(11) Addition.simps(12) Addition.simps(14) Addition.simps(16) Addition.simps(3) Addition.simps(6) Addition.simps(8) AdditiveInverse.cases)
-lemma "(x * x * x * x) = x" (*multiplication cycle*)
-  nitpick oops (*counterexample: since Z\<^sub>4 is not a field*)
-
+  by (smt (z3) Addition.simps AdditiveInverse.simps Z\<^sub>4.exhaust)
 lemma "x * (y + z) = (x * y) + (x * z)" (*multiplication distributes over addition*)
-  sorry (* by (smt (z3) Addition.simps(1) Addition.simps(10) Addition.simps(11) Addition.simps(12) Addition.simps(13) Addition.simps(14) Addition.simps(15) Addition.simps(16) Addition.simps(2) Addition.simps(3) Addition.simps(4) Addition.simps(5) Addition.simps(6) Addition.simps(7) Addition.simps(8) Addition.simps(9) AdditiveInverse.cases Multiplication.simps(1) Multiplication.simps(10) Multiplication.simps(11) Multiplication.simps(12) Multiplication.simps(13) Multiplication.simps(14) Multiplication.simps(15) Multiplication.simps(16) Multiplication.simps(2) Multiplication.simps(3) Multiplication.simps(4) Multiplication.simps(5) Multiplication.simps(6) Multiplication.simps(7) Multiplication.simps(8) Multiplication.simps(9)) *)
+  by (smt (z3) Addition.simps Multiplication.simps Z\<^sub>4.exhaust)
 lemma "x + (y * z) = (x + y) * (x + z)" nitpick oops (*countermodel: addition does not distribute over multiplication*)
 
 lemma "((x + y) = z) \<longleftrightarrow> (x = (z - y))" (*substraction law (for equalities)*)
-  sorry (* by (smt (verit, best) Addition.simps(1) Addition.simps(10) Addition.simps(11) Addition.simps(12) Addition.simps(13) Addition.simps(14) Addition.simps(15) Addition.simps(16) Addition.simps(2) Addition.simps(3) Addition.simps(4) Addition.simps(5) Addition.simps(6) Addition.simps(7) Addition.simps(8) Addition.simps(9) AdditiveInverse.cases AdditiveInverse.simps(1) AdditiveInverse.simps(2) AdditiveInverse.simps(3) AdditiveInverse.simps(4)) *)
-
-(*lemma "y \<noteq> 0 \<Longrightarrow> ((x * y) = z) \<longleftrightarrow> (x = (z / y))" (*division law (for equalities) *) *)
+  by (smt (z3) Addition.simps AdditiveInverse.cases AdditiveInverse.simps)
 
 
-subsubsection \<open>Polynomials\<close>
+subsection \<open>Particular Z4 Properties\<close>
+
+lemma addition_cycle: "(x + x + x + x) = 0" (*addition cycle*)
+  by (smt (z3) Addition.simps Z\<^sub>4.exhaust)
+lemma "(x * x * x * x) = x" (*multiplication cycle*)
+  nitpick oops (*counterexample: since Z\<^sub>4 is not a field*)
+
+lemma "(x + x) = 2*x"  (* multiplication as iterated addition *)
+  by (smt (z3) Addition.simps Multiplication.simps Z\<^sub>4.exhaust)
+lemma "(x + x + x) = 3*x"  (* multiplication as iterated addition *)
+  by (smt (z3) Addition.simps Multiplication.simps Z\<^sub>4.exhaust)
+
+
+subsection \<open>Polynomials\<close>
 
 (*for reading convenience*)
 notation(input) Multiplication (infixl "\<cdot>" 70)

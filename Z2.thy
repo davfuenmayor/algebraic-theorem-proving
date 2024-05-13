@@ -27,49 +27,45 @@ fun Multiplication::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2 \<Rightarrow> Z\<^sub>2" 
 abbreviation(input) AdditiveInverse::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2" ("-_" [81] 80)
   where "-x \<equiv> x"
 
+abbreviation(input) MultiplicativeInverse::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2" ("(_\<inverse>)" [1000] 999) 
+  where "x\<inverse> \<equiv> x" (* intended behaviour for x \<noteq> 0 *)
+
+(*Convenient abbreviations*)
 abbreviation Substraction::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2 \<Rightarrow> Z\<^sub>2" (infixl "-" 65) (*adding the additive inverse*)
   where "x - y \<equiv> x + -y"
-
-abbreviation(input) MultiplicativeInverse::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2" ("(_\<inverse>)" [1000] 999) 
-  where "x\<inverse> \<equiv> x" (* well defined for x \<noteq> 0 *)
-
 abbreviation Division::"Z\<^sub>2 \<Rightarrow> Z\<^sub>2 \<Rightarrow> Z\<^sub>2" (infixl "'/" 70) (*multiplying the multiplicative inverse*)
   where "x / y \<equiv> x * y\<inverse>"
 
 
-subsection \<open>Properties\<close>
+subsection \<open>General Field Properties\<close>
 
 lemma "x + 0 = x"  (* 0 is an additive unit*)
-  by (metis(full_types) Addition.simps(1) Addition.simps(3) Z\<^sub>2.exhaust)
+  by (smt (z3) Addition.simps Z\<^sub>2.exhaust)
 lemma "x * 0 = 0"     (* 0 is a multiplicative absorber*)
-  using Multiplication.elims by blast
-lemma "x * 1 = x"      (* 1 is a multiplicative unit*)
-  by (metis (full_types) Multiplication.simps(2) Multiplication.simps(4) Z\<^sub>2.exhaust)
-
-lemma "x + -x = 0"   (*additive inverse law*)
-  using Addition.elims by blast
-lemma "x \<noteq> 0 \<longrightarrow> x * x\<inverse> = 1"     (*multiplicative inverse law*)
-  using Multiplication.elims by blast
-
-lemma "(x + x) = 0" (*addition cycle*)
-  using Addition.elims by blast
-lemma "(x * x) = x" (*multiplication cycle*)
   by (smt (z3) Multiplication.elims)
-
+lemma "x * 1 = x"      (* 1 is a multiplicative unit*)
+  by (smt (z3) Multiplication.simps Z\<^sub>2.exhaust)
+lemma "x + -x = 0"   (*additive inverse law*)
+  by (smt (z3) Addition.elims)
+lemma "x \<noteq> 0 \<longrightarrow> x * x\<inverse> = 1"     (*multiplicative inverse law*)
+  by (smt (z3) Multiplication.elims)
 lemma "x * (y + z) = (x * y) + (x * z)" (*multiplication distributes over addition*)
-  (* by (smt (z3) Addition.simps(1) Multiplication.elims) *) sorry (*TODO: reconstruction takes too long*)
+  by (smt (z3) Addition.simps Multiplication.elims)
 lemma "x + (y * z) = (x + y) * (x + z)" nitpick oops (*countermodel: addition does not distribute over multiplication*)
 
-lemma "((x + y) = z) \<longleftrightarrow> (x = (z - y))" (*substraction law (for equalities)*)
-  (* by (smt (z3) Addition.elims) *) sorry (*TODO: reconstruction takes too long*)
-lemma "y \<noteq> 0 \<Longrightarrow> ((x * y) = z) \<longleftrightarrow> (x = (z / y))" (*division law (for equalities) *)
-  by (metis Multiplication.simps(2) Multiplication.simps(4) Z\<^sub>2.exhaust)
+lemma "((x + y) = z) \<longleftrightarrow> (x = (z - y))" (*substraction law*)
+  by (smt (z3) Addition.simps Z\<^sub>2.exhaust)
+lemma "y \<noteq> 0 \<Longrightarrow> ((x * y) = z) \<longleftrightarrow> (x = (z / y))" (*division law*)
+  by (smt (z3) Multiplication.simps Z\<^sub>2.exhaust)
 
 
-subsubsection \<open>Polynomials\<close>
+subsection \<open>Particular Z2 Properties\<close>
 
-(*for reading convenience*)
-notation(input) Multiplication (infixl "\<cdot>" 70)
+lemma addition_cycle: "(x + x) = 0" (*addition cycle*)
+  by (smt (z3) Addition.elims)
+lemma multiplication_cycle: "(x * x) = x" (*multiplication cycle*)
+  by (smt (z3) Multiplication.elims)
+
 
 subsection \<open>Polynomials\<close>
 
