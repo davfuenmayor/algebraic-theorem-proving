@@ -51,29 +51,24 @@ fun Multiplication::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4" 
 abbreviation(input) AdditiveInverse::"F\<^sub>4 \<Rightarrow> F\<^sub>4" ("-_" [81] 80) 
   where "-x \<equiv> x"
 
-abbreviation Substraction::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4" (infixl "-" 65) (*adding the additive inverse*)
-  where "x - y \<equiv> x + -y"
-
 fun MultiplicativeInverse::"F\<^sub>4 \<Rightarrow> F\<^sub>4" ("(_\<inverse>)" [1000] 999) where
-  "0\<inverse> = 0" |  (* as a convention *)
+  "0\<inverse> = 0" |  (* intended behaviour for x \<noteq> 0 (value for 0 chosen for convenience) *)
   "1\<inverse> = 1" |
   "a\<inverse> = b" |
   "b\<inverse> = a"
 
+(*Convenient abbreviations*)
+abbreviation Substraction::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4" (infixl "-" 65) (*adding the additive inverse*)
+  where "x - y \<equiv> x + -y"
 abbreviation Division::"F\<^sub>4 \<Rightarrow> F\<^sub>4 \<Rightarrow> F\<^sub>4" (infixl "'/" 70) (*multiplying the multiplicative inverse*)
   where "x / y \<equiv> x * y\<inverse>"
-
 abbreviation Square::"F\<^sub>4 \<Rightarrow> F\<^sub>4" ("(_)^2" [91]90)
   where "x^2 \<equiv> x*x"
 abbreviation Cube::"F\<^sub>4 \<Rightarrow> F\<^sub>4" ("(_)^3" [91]90)
   where "x^3 \<equiv> x*x*x"
 
 
-subsection \<open>Properties\<close>
-
-(* 'b' can be stated in terms of 'a' as: *)
-lemma "b = a + 1" by simp
-lemma "b = a^2" by simp
+subsection \<open>General Field Properties\<close>
 
 lemma "x + 0 = x"  (* 0 is an additive unit*)
   by (smt (z3) Addition.simps F\<^sub>4.exhaust)
@@ -81,33 +76,36 @@ lemma "x * 0 = 0"     (* 0 is a multiplicative absorber*)
   using Multiplication.elims by blast
 lemma "x * 1 = x"      (* 1 is a multiplicative unit*)
   by (smt (z3) Multiplication.simps F\<^sub>4.exhaust)
-
 lemma "x + -x = 0"   (*additive inverse law*)
   by (smt (z3) Addition.simps F\<^sub>4.exhaust)
-
 lemma "x \<noteq> 0 \<longrightarrow> x * x\<inverse> = 1"     (*multiplicative inverse law*)
   by (smt (z3) Multiplication.simps MultiplicativeInverse.simps F\<^sub>4.exhaust)
+lemma "x * (y + z) = (x * y) + (x * z)"  (*multiplication distributes over addition*)
+  by (smt (z3) Addition.simps Multiplication.simps MultiplicativeInverse.cases)
+lemma "x + (y * z) = (x + y) * (x + z)" nitpick oops (*countermodel: addition does not distribute over multiplication*)
+
+lemma "((x + y) = z) \<longleftrightarrow> (x = (z - y))" (*substraction law*)
+  by (smt (z3) Addition.simps F\<^sub>4.exhaust)
+lemma "y \<noteq> 0 \<Longrightarrow> ((x * y) = z) \<longleftrightarrow> (x = (z / y))" (*division law*)
+  by (smt (z3) Multiplication.simps MultiplicativeInverse.simps F\<^sub>4.exhaust)
+
+
+subsection \<open>Particular F4 Properties\<close>
+
+lemma addition_cycle: "(x + x) = 0" (*addition cycle (has size 2)*)
+  by (smt (z3) Addition.simps F\<^sub>4.exhaust)
+lemma multiplication_cycle: "(x * x * x * x) = x" (*multiplication cycle (has size 4)*)
+  by (smt (z3) Multiplication.simps F\<^sub>4.exhaust)
 
 (*Multiplication is NOT iterated addition *)
 lemma "(x + x) = a*x" nitpick oops (*counterexample*)
 lemma "(x + x) = b*x" nitpick oops (*counterexample*)
 lemma "(x + x + x) = a*x" nitpick oops (*counterexample*)
 lemma "(x + x + x) = b*x" nitpick oops (*counterexample*)
-    
-lemma "(x + x) = 0" (*addition cycle (has size 2)*)
-  by (smt (z3) Addition.simps F\<^sub>4.exhaust)
-lemma "(x * x * x * x) = x" (*multiplication cycle (has size 4)*)
-  by (smt (z3) Multiplication.simps F\<^sub>4.exhaust)
 
-lemma "x * (y + z) = (x * y) + (x * z)"  (*multiplication distributes over addition*)
-  by (smt (z3) Addition.simps Multiplication.simps MultiplicativeInverse.cases)
-lemma "x + (y * z) = (x + y) * (x + z)" nitpick oops (*countermodel: addition does not distribute over multiplication*)
-
-lemma "((x + y) = z) \<longleftrightarrow> (x = (z - y))" (*substraction law (for equalities)*)
-  by (smt (z3) Addition.simps F\<^sub>4.exhaust)
-
-lemma "y \<noteq> 0 \<Longrightarrow> ((x * y) = z) \<longleftrightarrow> (x = (z / y))" (*division law (for equalities) *)
-  by (smt (z3) Multiplication.simps MultiplicativeInverse.simps F\<^sub>4.exhaust)
+(* 'b' can be stated in terms of 'a'*)
+lemma "b = a + 1" by simp
+lemma "b = a^2" by simp
 
 
 subsubsection \<open>Polynomials\<close>
